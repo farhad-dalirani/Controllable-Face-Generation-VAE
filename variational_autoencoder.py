@@ -10,6 +10,9 @@ class Sampler(layers.Layer):
     mean 'emb_mean' and log variance 'emb_log_var'.
     """
 
+    def __init__(self, **kwargs):
+        super(Sampler, self).__init__(**kwargs)
+
     def call(self, inputs):
         emb_mean, emb_log_var = inputs
         batch_size = tf.shape(emb_mean)[0]
@@ -22,8 +25,8 @@ class Sampler(layers.Layer):
 
 class Encoder(models.Model):
     
-    def __init__(self, embedding_size=200, num_channels=128):
-        super(Encoder, self).__init__()
+    def __init__(self, embedding_size=200, num_channels=128, **kwargs):
+        super(Encoder, self).__init__(**kwargs)
         
         # Embedding size
         self.embedding_size = embedding_size
@@ -79,8 +82,8 @@ class Encoder(models.Model):
 
 class Decoder(models.Model):
     
-    def __init__(self, shape_before_flattening, num_channels=128):
-        super(Decoder, self).__init__()
+    def __init__(self, shape_before_flattening, num_channels=128, **kwargs):
+        super(Decoder, self).__init__(**kwargs)
         self.shape_before_flattening = shape_before_flattening
         self.num_channels = num_channels
 
@@ -129,8 +132,8 @@ class Decoder(models.Model):
 
 class VAE(models.Model):
     
-    def __init__(self, input_img_size=64, embedding_size=200, num_channels=128, beta=2000):
-        super(VAE, self).__init__()
+    def __init__(self, input_img_size=64, embedding_size=200, num_channels=128, beta=2000, **kwargs):
+        super(VAE, self).__init__(**kwargs)
         
         # Number of channels of conv and transpose conv inside decoder and encoder
         self.num_channels = num_channels
@@ -138,19 +141,19 @@ class VAE(models.Model):
         self.embedding_size = embedding_size
         # weight of reconstruction loss in comparosion of KL loss
         self.beta = beta
+        # Input image shape
+        self.input_img_size = input_img_size
 
         # Create encoder
-        input_shape = (input_img_size, input_img_size, 3) 
         self.enc = Encoder(embedding_size=self.embedding_size, num_channels=self.num_channels)
-        self.enc.build(input_shape=(None, *input_shape))
 
         # Feed a random value to calculate shape of features before flattening
-        random_input = np.random.random((1, input_img_size, input_img_size, 3)).astype(np.float32)
-        _ = self.enc(random_input) 
+        random_input = np.random.random((1, self.input_img_size, self.input_img_size, 3)).astype(np.float32)
+        _, _, emb_sampled = self.enc(random_input) 
 
         # Create decoder
         self.dec = Decoder(shape_before_flattening=self.enc.shape_before_flattening, num_channels=self.num_channels)
-        self.dec.build(input_shape=(None, self.embedding_size))
+        _ = self.dec(emb_sampled)
 
         # MSE Loss functions
         self.mse = losses.MeanSquaredError()
@@ -226,7 +229,7 @@ class VAE(models.Model):
             data = data[0]
             
         # Forward pass
-        emb_mean, emb_log_var, reconst = self(data, training=True)
+        emb_mean, emb_log_var, reconst = self(data, training=False)
         
         # Calculate reconstruction loss between input and output of VAE
         loss_recost = self.beta * self.mse(data, reconst)

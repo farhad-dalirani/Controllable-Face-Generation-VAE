@@ -6,7 +6,7 @@
     "input_img_size": 64,
     "batch_size": 128,
     "lr": 0.0004,
-    "max_epoch": 12,
+    "max_epoch": 14,
 
     "dataset_dir": "data/celeba",
 
