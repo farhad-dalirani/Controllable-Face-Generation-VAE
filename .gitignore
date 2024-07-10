@@ -1,0 +1,5 @@
+__pycache__
+test.py
+data/celeba/*
+model_weights/checkpoint/c*
+model_weights/logs/e*
