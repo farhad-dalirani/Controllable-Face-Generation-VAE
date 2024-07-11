@@ -45,8 +45,8 @@ class Encoder(models.Model):
         
         # Layers to calculate mean and log of variance for each input
         self.flattening = layers.Flatten()
-        self.dense_mean = layers.Dense(self.embedding_size, activation='relu', name="emb_mean")
-        self.dense_log_var = layers.Dense(self.embedding_size, activation='relu', name="emb_log_var")
+        self.dense_mean = layers.Dense(self.embedding_size, name="emb_mean")
+        self.dense_log_var = layers.Dense(self.embedding_size, name="emb_log_var")
         
         # Sampling layer for drawing sample calculated normal distribution
         self.sampler = Sampler()
@@ -104,7 +104,7 @@ class Decoder(models.Model):
         self.bn4 = layers.BatchNormalization()
 
         # Reduce number of channels to input image channels
-        self.conv1 = layers.Conv2D(3, (3,3), strides=1, activation='sigmoid', padding='same')
+        self.conv1 = layers.Conv2D(3, kernel_size=3, activation="sigmoid", padding="same")
 
         self.activation = layers.LeakyReLU()
 
@@ -197,7 +197,7 @@ class VAE(models.Model):
 
             # Calculate reconstruction loss between input and output of VAE
             loss_recost = self.beta * self.mse(data, reconst)
-
+            
             # Calculate KL divergence of predicted normal distribution for embedding and 
             # a standard normal distribution 
             loss_kl = self.kl(emb_mean, emb_log_var)

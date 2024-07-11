@@ -59,7 +59,7 @@ if __name__ == "__main__":
     plt.show()
 
     # Load dataset
-    train, validation = get_split_data()
+    train, validation = get_split_data(config=config)
 
     # Get some random images from dataset
     images = get_random_images(dataset=validation, num_images=10) 

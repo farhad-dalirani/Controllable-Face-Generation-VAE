@@ -58,6 +58,6 @@ if __name__ == '__main__':
     with open(config_path, 'r') as file:
         config = json.load(file)
     
-    train, validation = get_split_data()
+    train, validation = get_split_data(config=config)
 
     train_variational_autoencoder(config=config, train=train, validation=validation)

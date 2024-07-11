@@ -3,10 +3,10 @@
     "num_channels": 128,
     "beta": 2000,
 
-    "input_img_size": 32,
+    "input_img_size": 64,
     "batch_size": 128,
     "lr": 0.0005,
-    "max_epoch": 20,
+    "max_epoch": 12,
 
     "dataset_dir": "data/celeba",
 
