@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras import utils
 from variational_autoencoder import VAE
-from utilities import data_preprocess, get_random_images
+from utilities import get_split_data, get_random_images
 
 def generate(decoder, emd_size=200, num_generated_imgs=10):
     """
@@ -48,7 +48,7 @@ if __name__ == "__main__":
         embedding_size=config["embedding_size"], 
         num_channels=config["num_channels"], 
         beta=config["beta"])
-    model_vae.load_weights(os.path.join(config["model_save_path"], "vae.keras"))
+    model_vae.load_weights(os.path.join(config["model_save_path"], "checkpoint", "checkpoint.keras"))
     model_vae.summary()
 
     images_list = generate(decoder=model_vae.dec, emd_size=config["embedding_size"], num_generated_imgs=10)
@@ -59,21 +59,10 @@ if __name__ == "__main__":
     plt.show()
 
     # Load dataset
-    train_data = utils.image_dataset_from_directory(
-        os.path.join(config["dataset_dir"], "img_align_celeba"),
-        labels=None,
-        color_mode="rgb",
-        image_size=(config["input_img_size"], config["input_img_size"]),
-        batch_size=config["batch_size"],
-        shuffle=True,
-        seed=0,
-        interpolation="bilinear",
-    )
-    # UINT images to float in range 0, 1
-    train = train_data.map(lambda x: data_preprocess(x))
+    train, validation = get_split_data()
 
     # Get some random images from dataset
-    images = get_random_images(dataset=train, num_images=10) 
+    images = get_random_images(dataset=validation, num_images=10) 
 
     # Reconstruct some images by VAE
     list_imgs_recons = reconstruct(vae=model_vae, input_images=images)

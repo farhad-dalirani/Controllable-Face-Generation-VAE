@@ -3,11 +3,11 @@ import json
 import numbers as np
 import tensorflow as tf
 import tensorflow.keras.backend as K
-from tensorflow.keras import utils, optimizers, callbacks
+from tensorflow.keras import optimizers, callbacks
 from variational_autoencoder import VAE
-from utilities import data_preprocess
+from utilities import get_split_data
 
-def train_variational_autoencoder(config, train):
+def train_variational_autoencoder(config, train, validation):
     """ Train Variatioanl Autoencoder """
 
     # Create Variatioanl Autoencoder
@@ -38,6 +38,7 @@ def train_variational_autoencoder(config, train):
     # Train model
     model_vae.fit(
     train,
+    validation_data=validation,
     epochs=config["max_epoch"],
     callbacks=[
         model_checkpoint_clbk,
@@ -57,18 +58,6 @@ if __name__ == '__main__':
     with open(config_path, 'r') as file:
         config = json.load(file)
     
-    # Load dataset
-    train_data = utils.image_dataset_from_directory(
-        os.path.join(config["dataset_dir"], "img_align_celeba"),
-        labels=None,
-        color_mode="rgb",
-        image_size=(config["input_img_size"], config["input_img_size"]),
-        batch_size=config["batch_size"],
-        shuffle=True,
-        seed=0,
-        interpolation="bilinear",
-    )
-    # UINT images to float in range 0, 1
-    train = train_data.map(lambda x: data_preprocess(x))
+    train, validation = get_split_data()
 
-    train_variational_autoencoder(config=config, train=train)
+    train_variational_autoencoder(config=config, train=train, validation=validation)

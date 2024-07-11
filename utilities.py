@@ -1,5 +1,7 @@
+import os
 import numpy as np
 import tensorflow as tf
+from tensorflow.keras import utils
 
 def data_preprocess(image):
     """Convert UINT images to float in range 0, 1"""
@@ -20,3 +22,40 @@ def get_random_images(dataset, num_images=10):
     selected_images = [all_images[idx] for idx in selected_idx]
 
     return np.array(selected_images)
+
+def get_split_data(config, validation_split=0.2):
+    """Return train and validation split"""
+
+    # Create training dataset
+    train_data = utils.image_dataset_from_directory(
+        os.path.join(config["dataset_dir"], "img_align_celeba"),
+        labels=None,
+        color_mode="rgb",
+        image_size=(config["input_img_size"], config["input_img_size"]),
+        batch_size=config["batch_size"],
+        shuffle=True,
+        seed=0,
+        validation_split=validation_split,
+        subset="training",
+        interpolation="bilinear",
+    )
+
+    # Create validation dataset
+    validation_data = utils.image_dataset_from_directory(
+        os.path.join(config["dataset_dir"], "img_align_celeba"),
+        labels=None,
+        color_mode="rgb",
+        image_size=(config["input_img_size"], config["input_img_size"]),
+        batch_size=config["batch_size"],
+        shuffle=True,
+        seed=0,
+        validation_split=validation_split,
+        subset="validation",
+        interpolation="bilinear",
+    )
+
+    # Convert UINT images to float in range 0, 1
+    train = train_data.map(lambda x: data_preprocess(x))
+    validation = validation_data.map(lambda x: data_preprocess(x))
+
+    return train, validation
