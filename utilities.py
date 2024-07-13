@@ -23,7 +23,7 @@ def get_random_images(dataset, num_images=10):
 
     return np.array(selected_images)
 
-def get_split_data(config, validation_split=0.2):
+def get_split_data(config, shuffle=True, validation_split=0.2):
     """Return train and validation split"""
 
     # Create training dataset
@@ -33,7 +33,7 @@ def get_split_data(config, validation_split=0.2):
         color_mode="rgb",
         image_size=(config["input_img_size"], config["input_img_size"]),
         batch_size=config["batch_size"],
-        shuffle=True,
+        shuffle=shuffle,
         seed=0,
         validation_split=validation_split,
         subset="training",
@@ -47,7 +47,7 @@ def get_split_data(config, validation_split=0.2):
         color_mode="rgb",
         image_size=(config["input_img_size"], config["input_img_size"]),
         batch_size=config["batch_size"],
-        shuffle=True,
+        shuffle=shuffle,
         seed=0,
         validation_split=validation_split,
         subset="validation",

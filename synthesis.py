@@ -48,7 +48,7 @@ if __name__ == "__main__":
         embedding_size=config["embedding_size"], 
         num_channels=config["num_channels"], 
         beta=config["beta"])
-    model_vae.load_weights(os.path.join(config["model_save_path"], "checkpoint", "checkpoint.keras"))
+    model_vae.load_weights(os.path.join(config["model_save_path"],  "vae.keras"))
     model_vae.summary()
 
     images_list = generate(decoder=model_vae.dec, emd_size=config["embedding_size"], num_generated_imgs=10)
