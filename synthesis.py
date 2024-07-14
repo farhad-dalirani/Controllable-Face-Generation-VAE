@@ -6,7 +6,7 @@ from tensorflow.keras import utils
 from variational_autoencoder import VAE
 from utilities import get_split_data, get_random_images
 
-def generate(decoder, emd_size=200, num_generated_imgs=10):
+def generate(decoder, emd_size=200, num_generated_imgs=10, return_samples=False):
     """
         Generate new images by drawing samples from 
         standard normal distribution and feeding them into decoder
@@ -21,7 +21,10 @@ def generate(decoder, emd_size=200, num_generated_imgs=10):
 
     images_list = [outputs[i] for i in range(outputs.shape[0])]
 
-    return images_list
+    if return_samples == False:
+        return images_list
+    else:
+        return images_list, samples
 
 def reconstruct(vae, input_images):
     """Feed images to VAE and get reconstruction images"""
