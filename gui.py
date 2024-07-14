@@ -2,118 +2,10 @@ import streamlit as st
 import os
 import json
 import numpy as np
-import tensorflow as tf
 from variational_autoencoder import VAE
-from utilities import get_split_data, get_random_images
-from synthesis import generate, reconstruct
+from utilities import get_split_data
+from synthesis import generate_images, reconstruct_images, latent_arithmetic_on_images
 
-def generate_images(config, model_vae, num_images=70):
-    """
-    Generate new images with VAE and concatenate images to create one image.
-
-    Args:
-        config (dict): Configuration dictionary containing embedding size.
-        model_vae (object): Trained VAE model with decoder attribute.
-        num_images (int, optional): Number of images to generate. Defaults to 70.
-
-    Returns:
-        np.ndarray: Concatenated image of all generated images.
-    """
-    
-    # Generate a list of images using the VAE decoder
-    images_list = generate(decoder=model_vae.dec, 
-                           emd_size=config["embedding_size"],
-                           num_generated_imgs=num_images)
-    
-    rows = []
-    # Concatenate images into rows of 10 images each
-    for i in range(7):
-        rows.append(np.concatenate((images_list[(i*10):((i+1)*10)]), axis=1))
-    
-    # Concatenate all rows into a single image
-    all_images = np.concatenate(rows, axis=0)
-    
-    return all_images
-
-def reconstruct_images(model_vae, validation):
-    """
-    Randomly select some faces from the CelebA dataset, feed them to the VAE 
-    to reconstruct, then concatenate images.
-
-    Args:
-        model_vae (object): Trained VAE model.
-        validation (Dataset): Validation dataset containing CelebA images.
-
-    Returns:
-        np.ndarray: Concatenated image of original and reconstructed images.
-    """
-
-    # Get some random images from the validation dataset
-    images = get_random_images(dataset=validation, num_images=40)
-    
-    # Reconstruct the selected images using the VAE
-    list_imgs_recons = reconstruct(vae=model_vae, input_images=images)
-    
-    rows = []
-    # Concatenate original and reconstructed images in rows of 10
-    for i in range(4):
-         # Concatenate reconstructed images for the current row
-        row_rec = np.concatenate((list_imgs_recons[(i*10):((i+1)*10)]), axis=1)
-        # Concatenate original images for the current row
-        row_org = np.concatenate(([images[i] for i in range((i*10), ((i+1)*10))]), axis=1)
-        # Concatenate the original and reconstructed rows vertically
-        rows.append(np.concatenate((row_org, row_rec), axis=0))
-    
-    # Concatenate all rows into a single image
-    all_images = np.concatenate(rows, axis=0)
-    
-    return all_images
-
-def latent_arithmetic(config, model_vae, attribute_name, num_images=10):
-    """
-    Increase and decrease an attribute inside generated faces by latent space arithmetic.
-
-    Args:
-        config (dict): Configuration dictionary containing embedding size and input image size.
-        model_vae (object): Trained VAE model.
-        attribute_name (str): Name of the attribute to modify in the latent space.
-        num_images (int, optional): Number of images to generate. Defaults to 10.
-
-    Returns:
-        np.ndarray: Concatenated image showing the effect of the attribute change across generated images.
-    """
-    
-    # Draw samples from a standard normal distribution
-    mean = np.zeros(config["embedding_size"])
-    cov = np.eye(config["embedding_size"])
-    sampled_embds = np.random.multivariate_normal(mean, cov, size=num_images)
-
-    # Retrieve the latent vector for the specified attribute
-    latent_attribute_vector = np.array(st.session_state["attribute_vectors"][attribute_name])
-    latent_attribute_vector = np.reshape(latent_attribute_vector, newshape=(1, -1))
-
-    cols = []
-    # Modify the latent space by adding different levels of the attribute vector
-    for i in range(-3, 4):
-
-        # Adjust the latent embeddings by adding the attribute vector scaled by i
-        sampled_embds_new = sampled_embds + i * latent_attribute_vector
-
-        # Decode the adjusted embeddings to generate images
-        outputs = model_vae.dec.predict(sampled_embds_new)
-        images_list = [outputs[i] for i in range(outputs.shape[0])]
-        images_level_i = np.concatenate(images_list, axis=0)
-
-        cols.append(images_level_i)
-
-        # Add a separator between different levels of attribute change
-        if (i == -1) or (i == 0):
-            cols.append(np.ones(shape=(num_images * config["input_img_size"], config["input_img_size"], 3)))
-
-    # Concatenate all columns to create the final image
-    image = np.concatenate(cols, axis=1)
-
-    return image
 
 def main(config, model_vae, validation):
     st.title("Controllable Face Generation VAE")
@@ -157,10 +49,17 @@ def main(config, model_vae, validation):
                                                        index=list(st.session_state["attribute_vectors"].keys()).index('Blond_Hair'))
 
         if 'images_latent_arith' not in st.session_state:
-            st.session_state.images_latent_arith = latent_arithmetic(config, model_vae, attribute_name=st.session_state.attribute_key, num_images=10)
+            st.session_state.images_latent_arith = latent_arithmetic_on_images(
+                                                        config, model_vae,
+                                                        attribute_vector=np.array(st.session_state["attribute_vectors"][st.session_state.attribute_key]),
+                                                        num_images=10)
 
         if st.button('Perform Latent Space Arithmetic'):
-            st.session_state.images_latent_arith = latent_arithmetic(config, model_vae, attribute_name=st.session_state.attribute_key, num_images=7)
+            st.session_state.images_latent_arith = latent_arithmetic_on_images(
+                                                        config, 
+                                                        model_vae, 
+                                                        attribute_vector=np.array(st.session_state["attribute_vectors"][st.session_state.attribute_key]), 
+                                                        num_images=7)
 
         st.markdown("""
         <div style="background-color:#f0f0f0;padding:10px;border-radius:5px;">
