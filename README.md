@@ -11,9 +11,36 @@ The model is trained on the CelebA dataset [1, 2], and TensorFlow Keras and Stre
 # How to use
 
 - Download Celeba dataset and palce it in data folder, read `data/data_link.txt`. If want to use another directory, change `config/config.json` accordingly.  
+- If desired, you can change parameters such as resolution, embedding size, weight of reconstruction loss compared to KL divergence loss, etc., in `config/config.json`.
+- Train model with `python train_VAE.py`
+- Obtain face attributes for latent space arithmetic with `extract_vector_from_label.py`
+- Open interactive GUI for controllable face generation with `streamlit run gui.py `
 
 # Demo
 
+1. Controllable face generation with selected attributes and intensity of features.
+<p align="center">
+  <img src="readme-files/controlable-generation-2.png" alt="Alt Text" style="max-width: 35%;">
+</p>
+
+2. Reconstruct faces by feeding them to a VAE.
+<p align="center">
+  <img src="readme-files/reconstruction.png" alt="Alt Text" style="max-width: 35%;">
+</p>
+
+3. Perform Latent Space Arithmetic to observe the effect of weakening and strengthening a selected feature in generated faces.
+<p align="center">
+  <img src="readme-files/latent-space-arithmetic.png" alt="Alt Text" style="max-width: 35%;">
+</p>
+
+4. Morph pairs of faces gradually in multiple steps.
+<p align="center">
+  <img src="readme-files/morph-faces.png" alt="Alt Text" style="max-width: 35%;">
+</p>
+
+# To Do
+- Replace the model with a more sophisticated one to obtain better results with higher accuracy.
+- Investigate the MS-Celeb-1M (MS1M) dataset after upgrading the model architecture.
 
 # Notice
 The project is solely for educational or non-commercial research research purposes. For more information, please refer to the original CelebA license [1].

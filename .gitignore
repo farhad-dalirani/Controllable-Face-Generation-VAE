@@ -2,3 +2,8 @@ __pycache__
 test.py
 data/celeba/*
 model_weights/logs/e*
+model_weights/de*
+model_weights/en*
+model_weights/va*
+model_weights/checkpoint/checkpoint.keras
+attributes_embedings/attributes_embedings.json
