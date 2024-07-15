@@ -172,6 +172,49 @@ def latent_arithmetic_on_images(config, model_vae, attribute_vector, num_images=
     return image
 
 
+def morph_images(config, model_vae, num_images=10):
+    """
+    Morphs images by blending embeddings of two faces using a VAE model.
+
+    Parameters:
+    config (dict): Configuration dictionary containing 'embedding_size' and 'input_img_size'.
+    model_vae (VAE): Pre-trained VAE model used for image generation.
+    num_images (int): Number of images to generate for each blend level. Default is 10.
+
+    Returns:
+    np.ndarray: Final concatenated image showing the morphing process.
+    """
+    
+    # Draw samples from a standard normal distribution
+    mean = np.zeros(config["embedding_size"])
+    cov = np.eye(config["embedding_size"])
+    left_sampled_embds = np.random.multivariate_normal(mean, cov, size=num_images)
+    right_sampled_embds = np.random.multivariate_normal(mean, cov, size=num_images)
+
+    cols = []
+    # Modify the latent space by adding different levels of the attribute vector
+    for alpha in np.arange(0.0, 1.1, 0.1):
+        
+        # Adjust the latent embeddings by adding the attribute vector scaled by i
+        sampled_embds_new = (1 - alpha) * left_sampled_embds + alpha * right_sampled_embds
+
+        # Decode the embeddings to generate images
+        outputs = model_vae.dec.predict(sampled_embds_new)
+        images_list = [outputs[i] for i in range(outputs.shape[0])]
+        images_level_i = np.concatenate(images_list, axis=0)
+
+        cols.append(images_level_i)
+
+        # Add a separator between different levels of attribute change
+        if (alpha == 0) or (alpha == 0.9):
+            cols.append(np.ones(shape=(num_images * config["input_img_size"], config["input_img_size"], 3)))
+
+    # Concatenate all columns to create the final image
+    image = np.concatenate(cols, axis=1)
+
+    return image
+
+
 if __name__ == "__main__":
     
     import matplotlib.pyplot as plt

@@ -4,7 +4,7 @@ import json
 import numpy as np
 from variational_autoencoder import VAE
 from utilities import get_split_data
-from synthesis import generate_images, reconstruct_images, latent_arithmetic_on_images
+from synthesis import generate_images, reconstruct_images, latent_arithmetic_on_images, morph_images
 
 
 def main(config, model_vae, validation):
@@ -63,17 +63,30 @@ def main(config, model_vae, validation):
 
         st.markdown("""
         <div style="background-color:#f0f0f0;padding:10px;border-radius:5px;">
-            <p style="text-align:center;font-size:18px;font-weight:bold;">← Subtract - [Latent Vector of the Selected Attribute] - Add →</p>
+            <p style="text-align:center;font-size:18px;font-weight:bold;">← Subtract | Latent Vector of {} | Add →</p>
         </div>
-        """, unsafe_allow_html=True)
+        """.format(st.session_state.attribute_key), unsafe_allow_html=True)
         
         st.markdown('<div style="text-align:center;">', unsafe_allow_html=True)
         st.image(st.session_state.images_latent_arith)
         st.markdown('</div>', unsafe_allow_html=True)
 
     elif app_feature == 'Morph Faces':
-        pass
+        st.markdown("Generate faces and blend them together by calculating points between the embeddings of two faces.")
+
+        if 'images_morph' not in st.session_state:
+            st.session_state.images_morph = morph_images(config, model_vae, num_images=10)
+
+        if st.button('Morph Faces'):
+            st.session_state.images_morph = morph_images(config, model_vae, num_images=10)
         
+        st.markdown("""
+        <div style="background-color:#f0f0f0;padding:10px;border-radius:5px;">
+            <p style="text-align:center;font-size:18px;font-weight:bold;">→ Blend Pairs of Faces ←</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.image(st.session_state.images_morph)
 
 if __name__ == '__main__':
     
