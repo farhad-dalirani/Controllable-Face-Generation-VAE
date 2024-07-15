@@ -39,7 +39,8 @@ The model is trained on the CelebA dataset [1, 2], and TensorFlow Keras and Stre
 </p>
 
 # To Do
-- Replace the model with a more sophisticated one to obtain better results with higher accuracy.
+- Replace the model with a more sophisticated one to obtain better results with higher quality.
+- Increase resolution of generated images after replacing current neural network.
 - Investigate the MS-Celeb-1M (MS1M) dataset after upgrading the model architecture.
 
 # Notice
