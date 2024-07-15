@@ -4,7 +4,7 @@ import json
 import numpy as np
 from variational_autoencoder import VAE
 from utilities import get_split_data
-from synthesis import generate_images, reconstruct_images, latent_arithmetic_on_images, morph_images
+from synthesis import generate_images, reconstruct_images, latent_arithmetic_on_images, morph_images, generate_images_with_selected_attributes_vectors
 
 
 def main(config, model_vae, validation):
@@ -20,16 +20,37 @@ def main(config, model_vae, validation):
                                         'Morph Faces'])
 
     if app_feature == 'Generate Faces':
-        st.markdown("Randomly select vectors from a standard normal distribution and feed them to the decoder to generate new faces")
+        st.markdown("Randomly select vectors from a standard normal distribution. If any attributes are selected, add the selected attributes' latent space vector to the samples and feed them to the decoder to generate new faces.")
 
-        if 'images_gen' not in st.session_state:
-            st.session_state.images_gen = generate_images(config, model_vae)
+        # List of options for checkboxes
+        options = st.session_state["attribute_vectors"].keys()
 
+        # Initialize session state if not already done
+        if 'selected_options' not in st.session_state:
+            st.session_state['selected_options'] = {option: False for option in options}
+        if 'attribute_sliders' not in st.session_state:
+            st.session_state['attribute_sliders'] = {option: 1.0 for option in options}
+
+        # Create checkboxes and sliders, and update session state
+        st.sidebar.markdown("### Select Attributes")
+        for option in options:
+            st.session_state['selected_options'][option] = st.sidebar.checkbox(option, value=st.session_state['selected_options'][option])
+            if st.session_state['selected_options'][option]:
+                st.session_state['attribute_sliders'][option] = st.sidebar.slider(f"{option} value", -3.0, 3.0, value=st.session_state['attribute_sliders'][option])
+
+        # Generate images with selected options
+        selected_options = [option for option, selected in st.session_state['selected_options'].items() if selected]
+        attributes_vectors = []
+        for attribute_key in selected_options:
+            attributes_vectors.append(np.array(st.session_state["attribute_vectors"][attribute_key]) * st.session_state['attribute_sliders'][attribute_key])
+        
+        if 'images_generated' not in st.session_state:
+            st.session_state.images_generated = generate_images_with_selected_attributes_vectors(decoder=model_vae.dec, emd_size=config['embedding_size'], attributes_vectors=attributes_vectors)
         if st.button('Generate New Faces'):
-            st.session_state.images_gen = generate_images(config, model_vae)
+            st.session_state.images_generated = generate_images_with_selected_attributes_vectors(decoder=model_vae.dec, emd_size=config['embedding_size'], attributes_vectors=attributes_vectors)
 
-        st.image(st.session_state.images_gen)
-
+        st.image(st.session_state.images_generated)
+        
     elif app_feature == 'Reconstruct Faces':
         st.markdown("Randomly select faces from the CelebA dataset, feed them to a variational autoencoder, and depict the reconstructed faces")
         
@@ -67,7 +88,7 @@ def main(config, model_vae, validation):
         </div>
         """.format(st.session_state.attribute_key), unsafe_allow_html=True)
         
-        st.markdown('<div style="text-align:center;">', unsafe_allow_html=True)
+        st.markdown('<div style="display: flex; justify-content: center; align-items: center;">', unsafe_allow_html=True)
         st.image(st.session_state.images_latent_arith)
         st.markdown('</div>', unsafe_allow_html=True)
 

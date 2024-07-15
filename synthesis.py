@@ -215,6 +215,46 @@ def morph_images(config, model_vae, num_images=10):
     return image
 
 
+def generate_images_with_selected_attributes_vectors(decoder, emd_size=200, attributes_vectors=[], num_generated_imgs=70):
+    """
+    Generates images with selected attribute vectors using a decoder model.
+
+    Args:
+        decoder (Model): The decoder model to generate images.
+        emd_size (int): The size of the embedding vectors.
+        attributes_vectors (list): List of attribute vectors to add to the sampled vectors.
+        num_generated_imgs (int): The number of images to generate.
+
+    Returns:
+        np.array: A single image array containing all generated images concatenated.
+    """
+        
+    # Draw samples from a standard normal distribution
+    mean = np.zeros(emd_size)
+    cov = np.eye(emd_size)
+    samples = np.random.multivariate_normal(mean, cov, size=num_generated_imgs)
+
+    # Add attribute vectors to the sampled vectors to generate new images
+    for attribute_i in attributes_vectors:
+        samples = samples + np.reshape(attribute_i, newshape=(1, emd_size))
+
+    # Feed the embeddings to the decoder to generate images
+    outputs = decoder.predict(samples)
+
+    # Create a list of generated images
+    images_list = [outputs[i] for i in range(outputs.shape[0])]
+
+    rows = []
+    # Concatenate images into rows of 10 images each
+    for i in range(num_generated_imgs//10):
+        rows.append(np.concatenate((images_list[(i*10):((i+1)*10)]), axis=1))
+    
+    # Concatenate all rows into a single image
+    all_images = np.concatenate(rows, axis=0)
+    
+    return all_images
+   
+
 if __name__ == "__main__":
     
     import matplotlib.pyplot as plt
